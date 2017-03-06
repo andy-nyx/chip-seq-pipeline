@@ -490,17 +490,25 @@ def idr_quality_metric(step_run, stages, files):
     final_idr_stage_output = \
         stages['Final IDR peak calls']['stage_metadata']['output']
 
-    def IDR_plot(stage_name):
-        return get_attachment(
-            stages[stage_name]['stage_metadata']['output']['IDR2_plot'])
+    def IDR_output_attachment(stage_name_pattern, output_name):
+        for stage_name, stage in stages.iteritems():
+            if re.match(stage_name_pattern, stage_name):
+                return get_attachment(stage['stage_metadata']['output'][output_name])
+        logger.error('ERROR in IDR_output_attachment: stage_name_pattern %s matches no stage in %s' % (stage_name_pattern, stages.keys()))
+        return None
 
-    def IDR_params(stage_name):
-        return get_attachment(
-            stages[stage_name]['stage_metadata']['output']['EM_parameters_log'])
+    def IDR_plot(stage_name_pattern):
+        return IDR_output_attachment(stage_name_pattern, 'IDR2_plot')
 
-    def IDR_threshold(stage_name):
-        return float(
-            stages[stage_name]['stage_metadata']['originalInput']['idr_threshold'])
+    def IDR_params(stage_name_pattern):
+        return IDR_output_attachment(stage_name_pattern, 'EM_parameters_log')
+
+    def IDR_threshold(stage_name_pattern):
+        for stage_name, stage in stages.iteritems():
+            if re.match(stage_name_pattern, stage_name):
+                return float(stage['stage_metadata']['originalInput']['idr_threshold'])
+        logger.error('ERROR in IDR_threshold: stage_name_pattern %s matches no stage in %s' % (stage_name_pattern, stages.keys()))
+        return None
 
     obj = {
         # 'assay_term_id':     'OBI:0000716',
@@ -527,12 +535,12 @@ def idr_quality_metric(step_run, stages, files):
             'IDR_plot_true':    IDR_plot('IDR True Replicates'),
             'IDR_plot_rep1_pr': IDR_plot('IDR Rep 1 Self-pseudoreplicates'),
             'IDR_plot_rep2_pr': IDR_plot('IDR Rep 2 Self-pseudoreplicates'),
-            'IDR_plot_pool_pr': IDR_plot('IDR Pooled Pseudoreplicates'),
+            'IDR_plot_pool_pr': IDR_plot('IDR Pooled Pseudor?eplicates'),
 
             'IDR_parameters_true':    IDR_params('IDR True Replicates'),
             'IDR_parameters_rep1_pr': IDR_params('IDR Rep 1 Self-pseudoreplicates'),
             'IDR_parameters_rep2_pr': IDR_params('IDR Rep 2 Self-pseudoreplicates'),
-            'IDR_parameters_pool_pr': IDR_params('IDR Pooled Pseudoreplicates')
+            'IDR_parameters_pool_pr': IDR_params('IDR Pooled Pseudor?eplicates')
         })
         # these were not surfaced as outputs in earlier versions of the
         # ENCODE IDR applet, so need to check first if they're there
@@ -545,7 +553,7 @@ def idr_quality_metric(step_run, stages, files):
         idr_cutoffs = \
             [IDR_threshold(stage_name) for stage_name in
                 ['IDR True Replicates', 'IDR Rep 1 Self-pseudoreplicates',
-                 'IDR Rep 2 Self-pseudoreplicates', 'IDR Pooled Pseudoreplicates']]
+                 'IDR Rep 2 Self-pseudoreplicates', 'IDR Pooled Pseudor?eplicates']]
         if all(x == idr_cutoffs[0] for x in idr_cutoffs):
             obj.update({'IDR_cutoff': idr_cutoffs[0]})
         else:  # this is a serious enough error to block creation of the object
@@ -1049,7 +1057,9 @@ def get_mapping_stages(mapping_analysis, keypair, server, fqcheck, repn):
                  'metadata': bam_metadata}
             ],
 
-            'qc': [qc, dup_qc, pbc_qc, filtered_qc, xcor_qc],
+            # 'qc': [qc, dup_qc, pbc_qc, filtered_qc, xcor_qc],
+            # XXXX temporary to skip mapping qc
+            'qc': [],
 
             'stage_metadata': {}  # initialized below
         },
@@ -1906,8 +1916,9 @@ def set_property(dx_fh, prop):
 
 def qckiller(f, server, keypair):
     QC_OBJECS_TO_KILL = [
-        'chipseq_filter_quality_metric',
-        'samtools_flagstats_quality_metric',
+        # XXX temp disable removing mapping qc
+        # 'chipseq_filter_quality_metric',
+        # 'samtools_flagstats_quality_metric',
         'idr_quality_metric']
 
     for object_type in QC_OBJECS_TO_KILL:
@@ -2710,9 +2721,11 @@ def accession_tf_analysis_files(peaks_analysis, keypair, server, dryrun,
                          if stage_name.startswith('Filter and QC')),
                 'file_names': ['filtered_bam'],
                 'status': 'finished',
-                'qc_objects': [
-                    {'chipseq_filter_quality_metric': ['filtered_bam']},
-                    {'samtools_flagstats_quality_metric': ['filtered_bam']}]
+                # XXX temp change to not accession mapping qc
+                # 'qc_objects': [
+                #     {'chipseq_filter_quality_metric': ['filtered_bam']},
+                #     {'samtools_flagstats_quality_metric': ['filtered_bam']}]
+                'qc_objects': []
             } for mapping_stage in (mapping_stages if skip_control else
                                     mapping_stages + control_stages)
         ],
