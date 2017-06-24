@@ -18,6 +18,13 @@ call_chip_from_tas ENCSR000EEB \
 --key www \
 --yes
 
+# Test accessioning
+dx select "E3 ChIP-seq" \
+&& ~/bin/filekiller ENCSR000EEB --key accession-test --assembly GRCh38 \
+&& accession_analyses analysis-F567f480bpZvzpxp0YkbY5FB analysis-F567f5Q0bpZb9BFG0YzGqvXQ --key accession-test
+# after above completes, test peaks accessioning
+accession_analyses analysis-F567g580bpZg4Gq12yvFZv1P --key accession-test 
+
 ## full templates
 chip_workflow.py --target tf --debug --title TF_template --outp "E3 ChIP-seq" --use_existing_folders
 chip_workflow.py --target histone --debug --title histone_template --outp "E3 ChIP-seq" --use_existing_folders

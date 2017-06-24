@@ -2262,7 +2262,11 @@ def dx_file_at_encode(dx_fh, keypair, server):
         server + '/search/?type=File&md5sum=%s' % (md5sum),
         keypair=keypair)
     if search_result.get('@graph'):
-        return search_result.get('@graph')[0]
+        file_object = search_result.get('@graph')[0]
+        if file_object.get('status') == 'replaced':
+            return None
+        else:
+            return file_object
     else:
         return None
 
@@ -2372,12 +2376,12 @@ def new_metadata(old_obj, new_obj):
         if key not in old_obj:
             return True
         elif key == 'derived_from':
-            logger.debug("%s" % (set([re.search("ENCFF.{6}", s).group(0) for s in old_obj[key]])))
-            logger.debug("%s" % (set([re.search("ENCFF.{6}", s).group(0) for s in new_obj[key]])))
+            logger.debug("%s" % (set([re.search("...FF.{6}", s).group(0) for s in old_obj[key]])))
+            logger.debug("%s" % (set([re.search("...FF.{6}", s).group(0) for s in new_obj[key]])))
             try:
-                if set([re.search("ENCFF.{6}", s).group(0) for s in old_obj[key]]) \
+                if set([re.search("...FF.{6}", s).group(0) for s in old_obj[key]]) \
                    != \
-                   set([re.search("ENCFF.{6}", s).group(0) for s in new_obj[key]]):
+                   set([re.search("...FF.{6}", s).group(0) for s in new_obj[key]]):
                     return True
             except:
                 logger.warning(
@@ -3403,13 +3407,12 @@ def main(outfn, debug, dryrun,
 
     if not key or key in ['www', 'submit', 'production']:
         key = dxpy.api.system_whoami()['id']
-    elif key == 'test':
-        key = dxpy.api.system_whoami()['id'] + "-test"
+    else:
+        key = '-'.join([dxpy.api.system_whoami()['id'], key])
 
     key_tuple = common.processkey(key, keyfile)
     assert key_tuple, "ERROR: Key %s is not found in the keyfile %s" % (key, keyfile)
     authid, authpw, server = key_tuple
-    keypair = (authid, authpw)
 
     accession_subjobs = []
     for (i, analysis_id) in enumerate(ids):
