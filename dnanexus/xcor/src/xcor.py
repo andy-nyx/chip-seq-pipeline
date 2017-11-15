@@ -103,37 +103,46 @@ def main(input_bam, paired_end, spp_version):
     # Create BEDPE file
     # ================
     if paired_end:
+        intermediate_BEDPE_filename = input_bam_basename + ".bedpe"
         final_BEDPE_filename = input_bam_basename + ".bedpe.gz"
         # need namesorted bam to make BEDPE
-        final_nmsrt_bam_prefix = input_bam_basename + ".nmsrt"
-        final_nmsrt_bam_filename = final_nmsrt_bam_prefix + ".bam"
+        final_nmsrt_bam_filename = input_bam_basename + ".nmsrt.bam"
         samtools_sort_command = \
-            "samtools sort -n %s %s" % (input_bam_filename, final_nmsrt_bam_prefix)
+            "samtools sort -n -@ %d -o %s %s" % (cpu_count(), final_nmsrt_bam_filename, input_bam_filename)
         logger.info(samtools_sort_command)
         subprocess.check_output(shlex.split(samtools_sort_command))
         out, err = common.run_pipe([
             "bamToBed -bedpe -mate1 -i %s" % (final_nmsrt_bam_filename),
+            "tee %s" % (intermediate_BEDPE_filename),
             "gzip -cn"],
             outfile=final_BEDPE_filename)
 
     # =================================
     # Subsample tagAlign file
     # ================================
-    logger.info(
-        "Intermediate tA md5: %s" % (common.md5(intermediate_TA_filename)))
-    NREADS = 15000000
     if paired_end:
+        logger.info(
+            "Subsampling from BEDPE file %s with md5 %s"
+            % (intermediate_BEDPE_filename, common.md5(intermediate_BEDPE_filename)))
         end_infix = 'MATE1'
-    else:
+        sample_from_filename = intermediate_BEDPE_filename
+    else:  # single_end
+        logger.info(
+            "Subsampling from SE TA file %s with md5 %s"
+            % (intermediate_TA_filename, common.md5(intermediate_TA_filename)))
         end_infix = 'SE'
+        sample_from_filename = intermediate_TA_filename
+    NREADS = 15000000
     subsampled_TA_filename = \
         input_bam_basename + \
         ".filt.nodup.sample.%d.%s.tagAlign.gz" % (NREADS/1000000, end_infix)
     steps = [
-        'grep -v "chrM" %s' % (intermediate_TA_filename),
-        'shuf -n %d --random-source=%s' % (NREADS, intermediate_TA_filename)]
+        'grep -v "chrM" %s' % (sample_from_filename),
+        'shuf -n %d --random-source=%s' % (NREADS, sample_from_filename)]
     if paired_end:
-        steps.extend([r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}'"""])
+        steps.extend([
+            r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";$6=$9;print $1,$2,$3,$4,$5,$6}'""",
+            'sort'])
     steps.extend(['gzip -cn'])
     out, err = common.run_pipe(steps, outfile=subsampled_TA_filename)
     logger.info(
