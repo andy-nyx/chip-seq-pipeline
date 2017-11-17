@@ -18,6 +18,7 @@ import re
 import common
 import dxpy
 import logging
+from multiprocessing import cpu_count
 from pprint import pprint, pformat
 
 logger = logging.getLogger(__name__)
@@ -125,7 +126,7 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
     raw_bam_basename = raw_bam_file.name.rstrip('.bam')
     raw_bam_file_mapstats_filename = raw_bam_basename + '.flagstat.qc'
     dxpy.download_dxfile(raw_bam_file.get_id(), raw_bam_filename)
-    subprocess.check_output('set -x; ls -l', shell=True)
+    subprocess.check_call('ls -l', shell=True)
 
     # Generate initial mapping statistics
     with open(raw_bam_file_mapstats_filename, 'w') as fh:
@@ -155,13 +156,13 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
             # sort:  -n sort by name; - take input from stdin;
             # out to specified filename
             # Will produce name sorted BAM
-            "samtools sort -n - %s" % (tmp_filt_bam_prefix)])
+            "samtools sort -@ %d -n -o %s" % (cpu_count(), tmp_filt_bam_filename)])
         if err:
             logger.error("samtools error: %s" % (err))
         # Remove orphan reads (pair was removed)
         # and read pairs mapping to different chromosomes
         # Obtain position sorted BAM
-        subprocess.check_output('set -x; ls -l', shell=True)
+        subprocess.check_call('ls -l', shell=True)
         out, err = common.run_pipe([
             # fill in mate coordinates, ISIZE and mate-related flags
             # fixmate requires name-sorted alignment; -r removes secondary and
@@ -171,8 +172,8 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
             # repeat filtering after mate repair
             "samtools view -F 1804 -f 2 -u -",
             # produce the coordinate-sorted BAM
-            "samtools sort - %s" % (filt_bam_prefix)])
-        subprocess.check_output('set -x; ls -l', shell=True)
+            "samtools sort -@ %d -o %s" % (cpu_count(), filt_bam_filename)])
+        subprocess.check_call('ls -l', shell=True)
     else:  # single-end data
         # =============================
         # Remove unmapped, mate unmapped
@@ -237,7 +238,7 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
     samtools_index_command = \
         "samtools index %s %s" % (final_bam_filename, final_bam_index_filename)
     logger.info(samtools_index_command)
-    subprocess.check_output(shlex.split(samtools_index_command))
+    subprocess.check_call(shlex.split(samtools_index_command))
 
     # Generate mapping statistics
     with open(final_bam_file_mapstats_filename, 'w') as fh:
@@ -263,7 +264,7 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
     # PBC2=OnePair/TwoPair
     if paired_end:
         steps = [
-            "samtools sort -no %s -" % (filt_bam_filename),
+            "samtools sort -@ %d -n %s" % (cpu_count(), filt_bam_filename),
             "bamToBed -bedpe -i stdin",
             r"""awk 'BEGIN{OFS="\t"}{print $1,$2,$4,$6,$9,$10}'"""]
     else:
@@ -325,10 +326,10 @@ def main(input_bam, paired_end, samtools_params, scrub, debug):
         useable_fragments = final_mapstats_qc.get('in_total')[0]/2
     else:
         useable_fragments = final_mapstats_qc.get('in_total')[0]
-    logger.info("initial_mapstats_qc: %s" % (initial_mapstats_qc)),
-    logger.info("final_mapstats_qc: %s" % (final_mapstats_qc)),
-    logger.info("dup_qc: %s" % (dup_qc))
-    logger.info("pbc_qc: %s" % (pbc_qc))
+    logger.info("initial_mapstats_qc:\n%s" % (pformat(initial_mapstats_qc)))
+    logger.info("final_mapstats_qc:\n%s" % (pformat(final_mapstats_qc)))
+    logger.info("dup_qc:\n%s" % (pformat(dup_qc)))
+    logger.info("pbc_qc:\n%s" % (pformat(pbc_qc)))
 
     # Return links to the output files and values.
     output.update({
