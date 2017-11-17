@@ -151,7 +151,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_macs2
+/ChIP-seq/applets/encode_macs2
 
 # encode_macs2 replicate
 dx run \
@@ -175,7 +175,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_macs2
+/ChIP-seq/applets/encode_macs2
 
 # encode_spp simplicate
 dx run \
@@ -193,7 +193,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_spp
+/ChIP-seq/applets/encode_spp
 
 # encode_spp replicate
 dx run \
@@ -214,7 +214,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_spp
+/ChIP-seq/applets/encode_spp
 
 # idr2 replicate
 dx run \
@@ -227,7 +227,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/idr2
+/ChIP-seq/applets/idr2
 
 # idr2 simplicate
 dx run \
@@ -240,7 +240,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/idr2
+/ChIP-seq/applets/idr2
 
 # encode_idr replicate
 dx run \
@@ -266,7 +266,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_idr
+/ChIP-seq/applets/encode_idr
 
 # encode_idr simplicate
 dx run \
@@ -279,24 +279,24 @@ dx run \
 --input "blacklist=ENCODE Reference Files:/GRCh38/blacklists/GRCh38.blacklist.bed.gz" \
 --input "chrom_sizes=ENCODE Reference Files:/GRCh38/GRCh38_EBV.chrom.sizes" \
 --verbose \
---destination /test_results/encode_idr/$(date +"%Y%m%d%H%M") \
+--destination /test_results/encode_idr/test_$(date +"%Y%m%d%H%M") \
 --name encode_idr_test_singlicate \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-applets/encode_idr
+/ChIP-seq/applets/encode_idr
 
 # Run ENCODE_map on 36 bp SE chr21 extract
 dx run \
---input "reads1=ENCODE Uniform Processing Pipelines:/ChIP-seq/test_data/ENCSR000EEB-hMAFK/R1-ENCFF000XTT.chr21.fq.gz" \
---input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/GCA_000001405.15_GRCh38_no_alt_analysis_set.bwa.tar.gz" \
+--input "reads1=ENCODE Uniform Processing Pipelines:/ChIP-seq/test_data/hMAFK-ENCSR000EEB/rep1-ENCFF000XTT.chr21.fq.gz" \
+--input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GRCh38_chr21_bwa.tar.gz" \
 --verbose \
---destination /encode_map_test/test_$(date +"%Y%m%d%H%M") \
+--destination /test_results/encode_map_test/test_$(date +"%Y%m%d%H%M") \
 --name encode_map_test \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-encode_map
+/ChIP-seq/applets/encode_map
 
 
 # Run ENCODE_map on 36 bp SE chr21 extract, crop to 25 bp
@@ -310,7 +310,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-encode_map
+/ChIP-seq/applets/encode_map
 
 
 # Run ENCODE_map on 100 bp PE
@@ -324,7 +324,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-encode_map
+/ChIP-seq/applets/encode_map
 
 
 # Run ENCODE_map on 100 bp PE crop to 36
@@ -339,7 +339,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-encode_map
+/ChIP-seq/applets/encode_map
 
 
 # Run IDRv1 applet with ENCSR000EEB chr21 rep1 vs rep2
@@ -353,7 +353,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-idr
+/ChIP-seq/applets/idr
 
 # Run IDRv1 applet with ENCSR000EEB rep1 vs rep2
 dx run \
@@ -366,7 +366,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-idr
+/ChIP-seq/applets/idr
 
 # Run IDRv2 applet with ENCSR000EEB chr21 rep1 vs rep2
 dx run \
@@ -379,7 +379,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-idr2
+/ChIP-seq/applets/idr2
 
 # Run IDRv2 applet with ENCSR000EEB rep1 vs rep2
 dx run \
@@ -392,7 +392,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-idr2
+/ChIP-seq/applets/idr2
 
 # Run SPP with ENCSR000EEB chr21 rep1 vs input
 dx run \
@@ -408,7 +408,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-spp
+/ChIP-seq/applets/spp
 
 # Run SPP with ENCSR000EEB rep1 vs input - bedtobigbed fails with code 255 with coodinates in scientific notation
 dx run \
@@ -424,7 +424,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-spp
+/ChIP-seq/applets/spp
 
 # Test SPP with full GRCh38 vs GRCh38-minimalized tagAligns
 dx run \
@@ -441,7 +441,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-/applets/spp
+/ChIP-seq/applets/spp
 
 dx run \
 --input "control=ENCODE - ChIP Production:/test_TF_38/ENCFF972NVS.raw.srt.filt.nodup.srt.SE.tagAlign.gz" \
@@ -457,7 +457,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-/applets/spp
+/ChIP-seq/applets/spp
 
 dx run \
 --input "control=ENCODE - ChIP Production:/test_TF_38/c1_22.tagAlign.gz" \
@@ -473,7 +473,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-/applets/spp
+/ChIP-seq/applets/spp
 
 dx run \
 --input "control=ENCODE - ChIP Production:/test_TF_38/c1_22_Un.tagAlign.gz" \
@@ -488,7 +488,7 @@ dx run \
 --delay-workspace-destruction \
 --priority high \
 --yes \
-/applets/spp
+/ChIP-seq/applets/spp
 
 dx run \
 --input "control=/test_TF_38/c1_22_all.tagAlign.gz" \
@@ -506,7 +506,7 @@ dx run \
 --instance-type mem3_ssd1_x16 \
 --debug-on All \
 --ssh \
-/applets/spp
+/ChIP-seq/applets/spp
 
 
 # Run MACS2 with ENCSR678FIT chr19
@@ -526,7 +526,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-macs2
+/ChIP-seq/applets/macs2
 
 # Run MACS2 with ENCSR678FIT (narrow mark)
 dx run \
@@ -545,7 +545,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-macs2
+/ChIP-seq/applets/macs2
 
 # Run MACS2 with ENCSR311TLE (broad mark)
 dx run \
@@ -564,7 +564,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-macs2
+/ChIP-seq/applets/macs2
 
 # Run pool for ENCSR936XTK rep1 and rep2 tas
 dx run \
@@ -577,7 +577,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-/applets/pool
+/ChIP-seq/applets/pool
 
 # Run xcor_only for ENCSR936XTK rep1_2 pool
 dx run \
@@ -590,7 +590,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-/applets/xcor_only
+/ChIP-seq/applets/xcor_only
 
 # Run peak overlap for ENCSR678FIT chr19
 dx run \
@@ -611,12 +611,12 @@ dx run \
 --priority high \
 --yes \
 --watch \
-/applets/overlap_peaks
+/ChIP-seq/applets/overlap_peaks
 
 
 dx run \
 --input "paired_end=false" \
---input "input_bam=/test_data/ENCFF000XUL.chr21.raw.srt.bam" \
+--input "input_bam=/reference_analyses/GRCh38/bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.filt.nodup.srt.bam" \
 --verbose \
 --destination /test_output/ \
 --name filter_qc_test \
@@ -624,7 +624,7 @@ dx run \
 --priority high \
 --yes \
 --watch \
-/applets/filter_qc
+/ChIP-seq/applets/filter_qc
 
 
 ###### new tests for ChIP Demo
