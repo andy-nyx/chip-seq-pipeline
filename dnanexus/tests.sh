@@ -616,7 +616,7 @@ dx run \
 
 dx run \
 --input "paired_end=false" \
---input "input_bam=/reference_analyses/GRCh38/bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.filt.nodup.srt.bam" \
+--input "input_bam=E3 ChIP-seq:/reference_analyses/GRCh38/raw_bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.bam" \
 --verbose \
 --destination /test_output/ \
 --name filter_qc_test \
