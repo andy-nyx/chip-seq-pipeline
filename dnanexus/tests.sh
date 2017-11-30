@@ -579,7 +579,20 @@ dx run \
 --watch \
 /ChIP-seq/applets/pool
 
-# Run xcor_only for ENCSR936XTK rep1_2 pool
+# Run xcor_only for ENCSR000EEB rep1
+dx run \
+--input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.filt.nodup.srt.SE.tagAlign.gz" \
+--input "paired_end=false" \
+--verbose \
+--destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
+--name xcor_test \
+--delay-workspace-destruction \
+--priority high \
+--yes \
+--watch \
+/ChIP-seq/applets/xcor
+
+# Run xcor for ENCSR936XTK rep1_2 pool
 dx run \
 --input "input_tagAlign=/test_data/ENCSR936XTK/ENCFF960TNPENCFF640CBP.raw.srt.filt.srt.nodup.PE2SE-ENCFF246DIPENCFF616WSS.raw.srt.filt.srt.nodup.PE2SE_pooled.tagAlign.gz" \
 --input "paired_end=true" \
@@ -591,6 +604,7 @@ dx run \
 --yes \
 --watch \
 /ChIP-seq/applets/xcor_only
+
 
 # Run peak overlap for ENCSR678FIT chr19
 dx run \
