@@ -9,21 +9,33 @@
     ],
     "inputSpec": [
         {
-            "name": "input_bam",
-            "label": "Filtered BAM file",
-            "class": "file",
-            "optional": false
-        },
-        {
             "name": "paired_end",
             "class": "boolean",
             "optional": false
         },
         {
-          "name": "spp_version",
-          "label": "The version of SPP to use",
-          "class": "string",
-          "default": "1.14"
+            "name": "input_bam",
+            "label": "Filtered SE BAM file",
+            "class": "file",
+            "optional": true
+        },
+        {
+            "name": "input_tagAlign",
+            "label": "Filtered SE tagAlign file",
+            "class": "file",
+            "optional": true
+        },
+        {
+            "name": "input_fastq",
+            "label": "SE or read1 fastq",
+            "class": "file",
+            "optional": true
+        },
+        {
+          "name": "Nreads",
+          "label": "The number of reads to subsample",
+          "class": "int",
+          "default": 15000000
         }
     ],
     "outputSpec": [

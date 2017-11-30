@@ -17,11 +17,16 @@ from multiprocessing import cpu_count
 import dxpy
 import common
 import logging
+import sys
 
 logger = logging.getLogger(__name__)
 logger.addHandler(dxpy.DXLogHandler())
 logger.propagate = False
 logger.setLevel(logging.INFO)
+
+
+class InputException(Exception):
+    pass
 
 
 def xcor_parse(fname):
@@ -63,81 +68,72 @@ def xcor_parse(fname):
     return xcor_qc
 
 
+def single_true(iterable):
+    i = iter(iterable)
+    return any(i) and not any(i)
+
+
+def map_for_xcor(input_fastq):
+    return "se_50_filename"
+
+
 @dxpy.entry_point('main')
-def main(input_bam, paired_end):
+def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=None):
 
-    # The following line(s) initialize your data object inputs on the platform
-    # into dxpy.DXDataObject instances that you can start using immediately.
+    if not any([input_bam, input_fastq, input_tagAlign]):
+        logger.error("No input specified")
+        raise InputException("At least one input is required")
 
-    input_bam_file = dxpy.DXFile(input_bam)
+    if not single_true([input_bam, input_fastq, input_tagAlign]):
+        logger.error("Multiple inputs specified")
+        raise InputException("Only one input is allowed")
 
-    input_bam_filename = input_bam_file.name
-    input_bam_basename = input_bam_file.name.rstrip('.bam')
-    dxpy.download_dxfile(input_bam_file.get_id(), input_bam_filename)
+    if (input_bam or input_tagAlign) and paired_end:
+        logger.error("Cross-correlation analysis is not supported for paired_end mapping.  Supply read1 fastq instead.")
+        raise InputException("Paired-end input is not allowed")
 
-    intermediate_TA_filename = input_bam_basename + ".tagAlign"
-    if paired_end:
-        end_infix = 'PE2SE'
-    else:
-        end_infix = 'SE'
-    final_TA_filename = input_bam_basename + '.' + end_infix + '.tagAlign.gz'
-
-    # ===================
-    # Create tagAlign file
-    # ===================
-
-    out, err = common.run_pipe([
-        "bamToBed -i %s" % (input_bam_filename),
-        r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}'""",
-        "tee %s" % (intermediate_TA_filename),
-        "gzip -cn"],
-        outfile=final_TA_filename)
-
-    # ================
-    # Create BEDPE file
-    # ================
-    if paired_end:
-        intermediate_BEDPE_filename = input_bam_basename + ".bedpe"
-        final_BEDPE_filename = input_bam_basename + ".bedpe.gz"
-        # need namesorted bam to make BEDPE
-        final_nmsrt_bam_filename = input_bam_basename + ".nmsrt.bam"
-        samtools_sort_command = \
-            "samtools sort -n -@ %d -o %s %s" % (cpu_count(), final_nmsrt_bam_filename, input_bam_filename)
-        logger.info(samtools_sort_command)
-        subprocess.check_output(shlex.split(samtools_sort_command))
+    if input_tagAlign:
+        input_tagAlign_file = dxpy.DXFile(input_tagAlign)
+        input_tagAlign_filename = input_tagAlign_file.name
+        intermediate_TA_filename = input_tagAlign_file.name.rstrip('.gz')
+        dxpy.download_dxfile(input_tagAlign_file.get_id(), input_tagAlign_filename)
+        # ===================
+        # Unzip tagAlign file
+        # ===================
         out, err = common.run_pipe([
-            "bamToBed -bedpe -mate1 -i %s" % (final_nmsrt_bam_filename),
-            "tee %s" % (intermediate_BEDPE_filename),
-            "gzip -cn"],
-            outfile=final_BEDPE_filename)
+            "gzip -dc %s" % (input_tagAlign_filename)],
+            outfile=intermediate_TA_filename)
+    elif input_bam:
+        input_bam_file = dxpy.DXFile(input_bam)
+        input_bam_filename = input_bam_file.name
+        input_bam_basename = input_bam_file.name.rstrip('.bam')
+        intermediate_TA_filename = input_bam_basename + '.tagAlign'
+        dxpy.download_dxfile(input_bam_file.get_id(), input_bam_filename)
+        # ===================
+        # Create tagAlign file
+        # ===================
+        out, err = common.run_pipe([
+            "bamToBed -i %s" % (input_bam_filename),
+            r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}'"""],
+            outfile=intermediate_TA_filename)
+    elif input_fastq:
+        intermediate_TA_filename = map_for_xcor(input_fastq)
 
     # =================================
     # Subsample tagAlign file
     # ================================
-    if paired_end:
-        logger.info(
-            "Subsampling from BEDPE file %s with md5 %s"
-            % (intermediate_BEDPE_filename, common.md5(intermediate_BEDPE_filename)))
-        end_infix = 'MATE1'
-        sample_from_filename = intermediate_BEDPE_filename
-    else:  # single_end
-        logger.info(
-            "Subsampling from SE TA file %s with md5 %s"
-            % (intermediate_TA_filename, common.md5(intermediate_TA_filename)))
-        end_infix = 'SE'
-        sample_from_filename = intermediate_TA_filename
-    NREADS = 15000000
+    input_TA_basename = intermediate_TA_filename.rstrip('.tagAlign')
+    logger.info(
+        "Subsampling from tagAlign file %s with md5 %s"
+        % (intermediate_TA_filename, common.md5(intermediate_TA_filename)))
+    sample_from_filename = intermediate_TA_filename
     subsampled_TA_filename = \
-        input_bam_basename + \
-        ".filt.nodup.sample.%d.%s.tagAlign.gz" % (NREADS/1000000, end_infix)
+        input_TA_basename + \
+        ".%d.tagAlign.gz" % (Nreads/1000000)
     steps = [
         'grep -v "chrM" %s' % (sample_from_filename),
-        'shuf -n %d --random-source=%s' % (NREADS, sample_from_filename)]
-    if paired_end:
-        steps.extend([
-            r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";$6=$9;print $1,$2,$3,$4,$5,$6}'""",
-            'sort'])
-    steps.extend(['gzip -cn'])
+        'shuf -n %d --random-source=%s' % (Nreads, sample_from_filename),
+        'gzip -cn']
     out, err = common.run_pipe(steps, outfile=subsampled_TA_filename)
     logger.info(
         "Subsampled tA md5: %s" % (common.md5(subsampled_TA_filename)))
@@ -170,17 +166,12 @@ def main(input_bam, paired_end):
     out, err = common.run_pipe([
         "mv temp %s" % (CC_scores_filename)])
 
-    tagAlign_file = dxpy.upload_local_file(final_TA_filename)
-    if paired_end:
-        BEDPE_file = dxpy.upload_local_file(final_BEDPE_filename)
-
     CC_scores_file = dxpy.upload_local_file(CC_scores_filename)
     CC_plot_file = dxpy.upload_local_file(CC_plot_filename)
     xcor_qc = xcor_parse(CC_scores_filename)
 
     # Return the outputs
     output = {
-        "tagAlign_file": dxpy.dxlink(tagAlign_file),
         "CC_scores_file": dxpy.dxlink(CC_scores_file),
         "CC_plot_file": dxpy.dxlink(CC_plot_file),
         "paired_end": paired_end,
@@ -188,8 +179,6 @@ def main(input_bam, paired_end):
         "NSC": float(xcor_qc.get('phantomPeakCoef')),
         "est_frag_len": float(xcor_qc.get('estFragLen'))
     }
-    if paired_end:
-        output.update({"BEDPE_file": dxpy.dxlink(BEDPE_file)})
     return output
 
 
