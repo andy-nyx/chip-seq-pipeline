@@ -12,9 +12,12 @@
 #   http://autodoc.dnanexus.com/bindings/python/current/
 
 from multiprocessing import cpu_count
+from tempfile import NamedTemporaryFile
 import dxpy
 import common
 import logging
+import subprocess
+import shlex
 
 logger = logging.getLogger(__name__)
 logger.addHandler(dxpy.DXLogHandler())
@@ -97,9 +100,10 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
         # ===================
         # Unzip tagAlign file
         # ===================
-        out, err = common.run_pipe([
-            "gzip -dc %s" % (input_tagAlign_filename)],
-            outfile=intermediate_TA_filename)
+        with open(intermediate_TA_filename, 'w') as fh:
+            unzip_command = "gzip -dc %s" % (input_tagAlign_filename)
+            logger.info(unzip_command)
+            subprocess.check_call(shlex.split(unzip_command), stdout=fh)
     elif input_bam:
         input_bam_file = dxpy.DXFile(input_bam)
         input_bam_filename = input_bam_file.name
@@ -153,15 +157,20 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
     # QualityTag
 
     run_spp_command = '/phantompeakqualtools/run_spp.R'
-    out, err = common.run_pipe([
-        "Rscript %s -c=%s -p=%d -filtchr=chrM -savp=%s -out=%s"
-        % (run_spp_command, subsampled_TA_filename, cpu_count(),
-           CC_plot_filename, CC_scores_filename)])
-    out, err = common.run_pipe([
-        r"""sed -r  's/,[^\t]+//g' %s""" % (CC_scores_filename)],
-        outfile="temp")
-    out, err = common.run_pipe([
-        "mv temp %s" % (CC_scores_filename)])
+    xcor_command = "Rscript %s -c=%s -p=%d -filtchr=chrM -savp=%s -out=%s" \
+                   % (run_spp_command, subsampled_TA_filename, cpu_count(),
+                      CC_plot_filename, CC_scores_filename)
+    logger.info(xcor_command)
+    subprocess.check_call(shlex.split(xcor_command))
+
+    # Edit CC scores file to be tab-delimited
+    with NamedTemporaryFile(mode='w') as fh:
+        sed_command = r"""sed -r  's/,[^\t]+//g' %s""" % (CC_scores_filename)
+        logger.info(sed_command)
+        subprocess.check_call(shlex.split(sed_command), stdout=fh)
+        cp_command = "cp %s %s" % (fh.name, CC_scores_filename)
+        logger.info(cp_command)
+        subprocess.check_call(shlex.split(cp_command))
 
     CC_scores_file = dxpy.upload_local_file(CC_scores_filename)
     CC_plot_file = dxpy.upload_local_file(CC_plot_filename)
