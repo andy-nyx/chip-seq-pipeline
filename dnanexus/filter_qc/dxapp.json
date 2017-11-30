@@ -52,6 +52,17 @@
       "class": "file"
     },
     {
+        "name": "tagAlign_file",
+        "label": "Final tagAlign file.",
+        "class": "file"
+    },
+    {
+        "name": "BEDPE_file",
+        "label": "BEDPE file (read pairs on each line)",
+        "class": "file",
+        "optional": true
+    },
+    {
       "name": "filtered_mapstats",
       "label": "Post-filtering mapping statistics.",
       "class": "file"
