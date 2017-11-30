@@ -13,6 +13,7 @@
 
 from multiprocessing import cpu_count
 from tempfile import NamedTemporaryFile
+from pprint import pprint, pformat
 import dxpy
 import common
 import logging
@@ -172,9 +173,12 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
         logger.info(cp_command)
         subprocess.check_call(shlex.split(cp_command))
 
+    logger.info("Uploading results files to the project")
     CC_scores_file = dxpy.upload_local_file(CC_scores_filename)
     CC_plot_file = dxpy.upload_local_file(CC_plot_filename)
     xcor_qc = xcor_parse(CC_scores_filename)
+
+    logger.info("xcor_qc:\n%s" % (pformat(xcor_qc)))
 
     # Return the outputs
     output = {
@@ -185,6 +189,7 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
         "NSC": float(xcor_qc.get('phantomPeakCoef')),
         "est_frag_len": float(xcor_qc.get('estFragLen'))
     }
+    logger.info("Exiting with output:\n%s" % (pformat(output)))
     return output
 
 
