@@ -11,13 +11,10 @@
 # DNAnexus Python Bindings (dxpy) documentation:
 #   http://autodoc.dnanexus.com/bindings/python/current/
 
-import subprocess
-import shlex
 from multiprocessing import cpu_count
 import dxpy
 import common
 import logging
-import sys
 
 logger = logging.getLogger(__name__)
 logger.addHandler(dxpy.DXLogHandler())
