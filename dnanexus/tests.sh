@@ -579,7 +579,7 @@ dx run \
 --watch \
 /ChIP-seq/applets/pool
 
-# Run xcor_only for ENCSR000EEB rep1
+# Run xcor for ENCSR000EEB rep1
 dx run \
 --input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.filt.nodup.srt.SE.tagAlign.gz" \
 --input "paired_end=false" \
@@ -588,6 +588,7 @@ dx run \
 --name xcor_test \
 --delay-workspace-destruction \
 --priority high \
+--instance-type mem3_ssd1_x16 \
 --yes \
 --watch \
 /ChIP-seq/applets/xcor
