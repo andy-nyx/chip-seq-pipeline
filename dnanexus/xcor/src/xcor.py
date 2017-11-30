@@ -24,12 +24,6 @@ logger.propagate = False
 logger.setLevel(logging.INFO)
 
 
-# SPP_VERSION_MAP = {
-#     "1.10.1": "/phantompeakqualtools/spp_1.10.1.tar.gz",
-#     "1.14":   "/phantompeakqualtools/spp-1.14.tar.gz"
-# }
-
-
 def xcor_parse(fname):
     with open(fname, 'r') as xcor_file:
         if not xcor_file:
@@ -70,7 +64,7 @@ def xcor_parse(fname):
 
 
 @dxpy.entry_point('main')
-def main(input_bam, paired_end, spp_version):
+def main(input_bam, paired_end):
 
     # The following line(s) initialize your data object inputs on the platform
     # into dxpy.DXDataObject instances that you can start using immediately.
@@ -165,11 +159,6 @@ def main(input_bam, paired_end, spp_version):
     # relPhantomPeakCoef <tab>
     # QualityTag
 
-    # spp_tarball = SPP_VERSION_MAP.get(spp_version)
-    # assert spp_tarball, "spp version %s is not supported" % (spp_version)
-    # # install spp
-    # subprocess.check_output(shlex.split('R CMD INSTALL %s' % (spp_tarball)))
-    # run spp
     run_spp_command = '/phantompeakqualtools/run_spp.R'
     out, err = common.run_pipe([
         "Rscript %s -c=%s -p=%d -filtchr=chrM -savp=%s -out=%s"
