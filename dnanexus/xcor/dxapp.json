@@ -40,17 +40,6 @@
     ],
     "outputSpec": [
         {
-            "name": "tagAlign_file",
-            "label": "Final tagAlign file.",
-            "class": "file"
-        },
-        {
-            "name": "BEDPE_file",
-            "label": "BEDPE file (read pairs on each line)",
-            "class": "file",
-            "optional": true
-        },
-        {
             "name": "CC_scores_file",
             "label": "Tab-delimited NSC/RSC results",
             "class": "file"
