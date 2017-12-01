@@ -625,7 +625,7 @@ dx run \
 
 # Run xcor for ENCSR155KHM rep1 THE RIGHT WAY (i.e. remapping rep1 and cropping to 50)
 dx run \
---input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/fastqs/ENCSR155KHM/rep1/ENCFF109UIV.fastq.gz" \
+--input "input_fastq=E3 ChIP-seq:/reference_analyses/GRCh38/fastqs/ENCSR155KHM/rep1/ENCFF109UIV.fastq.gz" \
 --input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GCA_000001405.15_GRCh38_no_alt_analysis_set.bwa.tar.gz" \
 --input "paired_end=false" \
 --verbose \
