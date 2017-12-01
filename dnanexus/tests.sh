@@ -579,9 +579,68 @@ dx run \
 --watch \
 /ChIP-seq/applets/pool
 
-# Run xcor for ENCSR000EEB rep1
+# Run xcor for SE ENCSR000EEB rep1
 dx run \
 --input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/bams/ENCSR000EEB/rep1/ENCFF000XUL.raw.srt.filt.nodup.srt.SE.tagAlign.gz" \
+--input "paired_end=false" \
+--verbose \
+--destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
+--name xcor_test \
+--delay-workspace-destruction \
+--priority high \
+--instance-type mem3_ssd1_x16 \
+--yes \
+--watch \
+/ChIP-seq/applets/xcor
+
+# Run xcor for SE ENCSR000EEB rep1 chr21 extract from fastq
+dx run \
+--input "input_fastq=E3 ChIP-seq:/test_data/TF/ENCSR000EEB-hs-MAFK/rep1-chr21.fq.gz" \
+--input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GRCh38_chr21_bwa.tar.gz" \
+--input "paired_end=false" \
+--verbose \
+--destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
+--name xcor_test \
+--delay-workspace-destruction \
+--priority high \
+--instance-type mem3_ssd1_x16 \
+--yes \
+--watch \
+/ChIP-seq/applets/xcor
+
+# Run xcor for SE ENCSR000EEB rep1 from full fastq
+dx run \
+--input "input_fastq=E3 ChIP-seq:/test_data/TF/ENCSR000EEB-hs-MAFK/rep1-ENCFF000XUL.fastq.gz" \
+--input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GCA_000001405.15_GRCh38_no_alt_analysis_set.bwa.tar.gz" \
+--input "paired_end=false" \
+--verbose \
+--destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
+--name xcor_test \
+--delay-workspace-destruction \
+--priority high \
+--instance-type mem3_ssd1_x16 \
+--yes \
+--watch \
+/ChIP-seq/applets/xcor
+
+# Run xcor for ENCSR155KHM rep1 THE RIGHT WAY (i.e. remapping rep1 and cropping to 50)
+dx run \
+--input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/fastqs/ENCSR155KHM/rep1/ENCFF109UIV.fastq.gz" \
+--input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GCA_000001405.15_GRCh38_no_alt_analysis_set.bwa.tar.gz" \
+--input "paired_end=false" \
+--verbose \
+--destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
+--name xcor_test \
+--delay-workspace-destruction \
+--priority high \
+--instance-type mem3_ssd1_x16 \
+--yes \
+--watch \
+/ChIP-seq/applets/xcor
+
+# Run xcor for ENCSR155KHM rep1 THE WRONG WAY (i.e. sampling from both read1 and 2)
+dx run \
+--input "input_tagAlign=E3 ChIP-seq:/reference_analyses/GRCh38/bams/ENCSR155KHM/rep1/ENCFF109UIVENCFF748SHJ.raw.srt.filt.srt.nodup.PE2SE.tagAlign.gz" \
 --input "paired_end=false" \
 --verbose \
 --destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
