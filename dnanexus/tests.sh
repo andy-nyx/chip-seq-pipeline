@@ -628,6 +628,7 @@ dx run \
 --input "input_fastq=E3 ChIP-seq:/reference_analyses/GRCh38/fastqs/ENCSR155KHM/rep1/ENCFF109UIV.fastq.gz" \
 --input "reference_tar=ENCODE Uniform Processing Pipelines:/Reference Files/GRCh38/ChIP-seq/GCA_000001405.15_GRCh38_no_alt_analysis_set.bwa.tar.gz" \
 --input "paired_end=false" \
+--input "crop_length=50" \
 --verbose \
 --destination /test_results/xcor/$(date +"%Y%m%d%H%M") \
 --name xcor_test \
