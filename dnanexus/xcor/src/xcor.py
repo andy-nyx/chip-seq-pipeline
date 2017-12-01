@@ -74,12 +74,42 @@ def single_true(iterable):
     return any(i) and not any(i)
 
 
-def map_for_xcor(input_fastq):
-    return "se_50_filename"
+def map_for_xcor(input_fastq, reference_tar, crop_length):
+    encode_map_applet = dxpy.find_one_data_object(
+        classname='applet',
+        name='encode_map',
+        project=dxpy.PROJECT_CONTEXT_ID,
+        zero_ok=False,
+        more_ok=False,
+        return_handler=True)
+    filter_qc_applet = dxpy.find_one_data_object(
+        classname='applet',
+        name='filter_qc',
+        project=dxpy.PROJECT_CONTEXT_ID,
+        zero_ok=False,
+        more_ok=False,
+        return_handler=True)
+
+    mapping_subjob = \
+        encode_map_applet.run(
+            {"reads1": input_fastq,
+             "crop_length": crop_length or 'native',
+             "reference_tar": reference_tar},
+            name='map_for_xcor')
+    filter_qc_subjob = \
+        filter_qc_applet.run(
+            {"input_bam": mapping_subjob.get_output_ref("mapped_reads"),
+             "paired_end": False},
+            name='filter_qc_for_xcor')
+    filter_qc_subjob.wait_on_done()
+    tagAlign_for_xcor = filter_qc_subjob.describe()['output'].get("tagAlign_file")
+
+    return tagAlign_for_xcor
 
 
 @dxpy.entry_point('main')
-def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=None):
+def main(paired_end, Nreads, crop_length=None, input_bam=None, input_fastq=None,
+         input_tagAlign=None, reference_tar=None):
 
     if not any([input_bam, input_fastq, input_tagAlign]):
         logger.error("No input specified")
@@ -92,6 +122,9 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
     if (input_bam or input_tagAlign) and paired_end:
         logger.error("Cross-correlation analysis is not supported for paired_end mapping.  Supply read1 fastq instead.")
         raise InputException("Paired-end input is not allowed")
+
+    if input_fastq:
+        input_tagAlign = map_for_xcor(input_fastq, reference_tar, crop_length)
 
     if input_tagAlign:
         input_tagAlign_file = dxpy.DXFile(input_tagAlign)
@@ -118,8 +151,6 @@ def main(paired_end, Nreads, input_bam=None, input_fastq=None, input_tagAlign=No
             "bamToBed -i %s" % (input_bam_filename),
             r"""awk 'BEGIN{OFS="\t"}{$4="N";$5="1000";print $0}'"""],
             outfile=intermediate_TA_filename)
-    elif input_fastq:
-        intermediate_TA_filename = map_for_xcor(input_fastq)
 
     # =================================
     # Subsample tagAlign file
