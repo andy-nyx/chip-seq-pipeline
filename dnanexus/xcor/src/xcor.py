@@ -123,6 +123,7 @@ def main(paired_end, Nreads, crop_length=None, input_bam=None, input_fastq=None,
         logger.error("Cross-correlation analysis is not supported for paired_end mapping.  Supply read1 fastq instead.")
         raise InputException("Paired-end input is not allowed")
 
+    # Should rearchitect this to use subjobs so the main instance doesn't wait idle for the mapping instances to complete
     if input_fastq:
         input_tagAlign = map_for_xcor(input_fastq, reference_tar, crop_length)
 
