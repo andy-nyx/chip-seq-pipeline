@@ -41,7 +41,8 @@
           "name": "crop_length",
           "label": "If fastq is supplied, crop all reads to this length",
           "class": "string",
-          "optional": true
+          "optional": true,
+          "default": "50"
         },
         {
           "name": "Nreads",
