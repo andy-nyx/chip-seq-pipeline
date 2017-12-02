@@ -158,11 +158,6 @@ def get_args():
         default=False,
         action='store_true')
 
-    parser.add_argument(
-        '--spp_version',
-        help="Version of spp to use for the cross-correlation analysis",
-        default='1.14')
-
     parser.add_argument('--accession', help="Accession the results to the ENCODE Portal", default=False, action='store_true')
     parser.add_argument('--fqcheck', help="If --accession, check that analysis is based on latest fastqs on ENCODEd", type=t_or_f, default=None)
     parser.add_argument('--force_patch', help="Force patching metadata for existing files", type=t_or_f, default=None)
@@ -427,37 +422,12 @@ def build_workflow(experiment, biorep_n, input_shield_stage_input, accession, us
             name='Calculate cross-correlation %s rep%d' %(experiment.get('accession'), biorep_n),
             folder=final_output_folder,
             stage_input={
-                'input_bam': dxpy.dxlink({'stage': filter_qc_stage_id, 'outputField': 'filtered_bam'}),
-                'paired_end': dxpy.dxlink({'stage': filter_qc_stage_id, 'outputField': 'paired_end'}),
-                'spp_version': args.spp_version
+                'input_fastq': dxpy.dxlink({'stage': input_shield_stage_id, 'outputField': 'reads1'}),
+                'input_tagAlign': dxpy.dxlink({'stage': input_shield_stage_id, 'outputField': 'tagAlign_file'}),
+                'paired_end': dxpy.dxlink({'stage': filter_qc_stage_id, 'outputField': 'paired_end'})
             }
         )
 
-
-    ''' This should all be done in the shield's postprocess entrypoint
-    if args.accession_outputs:
-        derived_from = input_shield_stage_input.get('reads1')
-        if reads2:
-            derived_from.append(reads2)
-        files_json = {dxpy.dxlink({'stage': mapping_stage_id, 'outputField': 'mapped_reads'}) : {
-            'notes': 'Biorep%d | Mapped to %s' %(biorep_n, input_shield_stage_input.get('reference_tar')),
-            'lab': 'j-michael-cherry',
-            'award': 'U41HG006992',
-            'submitted_by': 'jseth@stanford.edu',
-            'file_format': 'bam',
-            'output_type': 'alignments',
-            'derived_from': derived_from,
-            'dataset': experiment.get('accession')}
-        }
-        output_shield_stage_id = workflow.add_stage(
-            output_shield_applet,
-            name='Accession outputs %s rep%d' %(experiment.get('accession'), biorep_n),
-            folder=mapping_output_folder,
-            stage_input={'files': [dxpy.dxlink({'stage': mapping_stage_id, 'outputField': 'mapped_reads'})],
-                         'files_json': files_json,
-                         'key': input_shield_stage_input.get('key')}
-        )
-    '''
     return workflow
 
 
